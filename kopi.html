@@ -55,6 +55,26 @@
             padding: 0 24px 80px;
         }
 
+        /* ── nav ── */
+        .main-nav {
+            padding: 24px 0 0 0;
+            display: flex;
+            gap: 24px;
+        }
+        .main-nav a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-family: var(--font-mono);
+            transition: color 0.2s ease;
+        }
+        .main-nav a:hover, .main-nav a.active {
+            color: var(--accent);
+        }
+
         /* ── header ── */
         header {
             padding: 48px 0 40px;
@@ -429,6 +449,11 @@
 
 <body>
     <div class="shell">
+
+        <nav class="main-nav">
+            <a href="kopi.html" class="active">Kopi</a>
+            <a href="bean.html">Bean</a>
+        </nav>
 
         <header>
             <div class="eyebrow">Coffee Loyalty Pass</div>

@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffee Bean Subscription Economics Calculator</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;700&display=swap');
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0f0e0c;
+            --surface: #1a1916;
+            --surface2: #232119;
+            --border: rgba(255, 255, 255, 0.07);
+            --border-strong: rgba(255, 255, 255, 0.13);
+            --text: #f0ede6;
+            --muted: #7a7670;
+            --hint: #4a4845;
+            --accent: #c8a96e;
+            --accent-dim: rgba(200, 169, 110, 0.12);
+            --accent-dim2: rgba(200, 169, 110, 0.06);
+            --green: #5daa7f;
+            --green-dim: rgba(93, 170, 127, 0.12);
+            --red: #c4624a;
+            --red-dim: rgba(196, 98, 74, 0.1);
+            --amber: #d4943a;
+            --font-main: 'DM Sans', system-ui, sans-serif;
+            --font-mono: 'DM Mono', monospace;
+        }
+
+        html {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-main);
+            font-size: 16px;
+            line-height: 1.6;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+        }
+
+        /* ── layout ── */
+        .shell {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+        }
+
+        /* ── header ── */
+        header {
+            padding: 48px 0 40px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 40px;
+        }
+
+        .eyebrow {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        h1 {
+            font-size: clamp(28px, 4vw, 42px);
+            font-weight: 300;
+            line-height: 1.15;
+            color: var(--text);
+        }
+
+        h1 strong {
+            font-weight: 500;
+        }
+
+        .tagline {
+            margin-top: 10px;
+            font-size: 15px;
+            color: var(--muted);
+            max-width: 800px;
+        }
+
+        /* ── grid layout ── */
+        .cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1400px) {
+            .cols {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── panel ── */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: border-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .panel:hover {
+            border-color: rgba(200, 169, 110, 0.2);
+        }
+
+        .panel-title {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            border-bottom: 1px dashed var(--border);
+            padding-bottom: 8px;
+        }
+
+        /* ── segmented selectors ── */
+        .tier-selector-container, .curation-selector-container {
+            display: flex;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 10px;
+        }
+
+        .selector-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--muted);
+            font-family: var(--font-main);
+            font-size: 11px;
+            font-weight: 500;
+            padding: 6px 4px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .selector-btn:hover {
+            color: var(--text);
+        }
+
+        .selector-btn.active {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        /* ── sliders and controls ── */
+        .control {
+            margin-bottom: 20px;
+        }
+
+        .control:last-child {
+            margin-bottom: 0;
+        }
+
+        .ctrl-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+
+        .ctrl-label {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .ctrl-value {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--accent);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 2px;
+            background: var(--border-strong);
+            border-radius: 1px;
+            outline: none;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        input[type=range]:hover {
+            background: var(--accent-dim);
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+            background: #e5c589;
+        }
+
+        input[type=range]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+        }
+
+        input[type=range]::-moz-range-thumb:hover {
+            transform: scale(1.25);
+            background: #e5c589;
+        }
+
+        /* ── billing segmented selector ── */
+        .billing-toggle-container {
+            display: flex;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 8px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--muted);
+            font-family: var(--font-main);
+            font-size: 12px;
+            font-weight: 500;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn:hover {
+            color: var(--text);
+        }
+
+        .toggle-btn.active {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .billing-hint {
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.4;
+            opacity: 0.8;
+        }
+
+        /* ── metrics ── */
+        .metric-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric-row.triple {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        @media (max-width: 500px) {
+            .metric-row.triple {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .metric {
+            background: var(--surface2);
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            transition: border-color 0.3s ease;
+        }
+
+        .metric:hover {
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .metric .m-label {
+            font-size: 9px;
+            color: var(--muted);
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+            white-space: nowrap;
+        }
+
+        .metric .m-val {
+            font-size: 20px;
+            font-weight: 500;
+            color: var(--text);
+            font-family: var(--font-mono);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .metric .m-sub {
+            font-size: 10px;
+            color: var(--hint);
+            margin-top: 3px;
+            line-height: 1.3;
+        }
+
+        .metric.good .m-val {
+            color: var(--green);
+        }
+
+        .metric.accent .m-val {
+            color: var(--accent);
+        }
+
+        .metric.alert .m-val {
+            color: var(--red);
+        }
+
+        .metric.warn .m-val {
+            color: var(--amber);
+        }
+
+        /* ── breakdown table ── */
+        .breakdown {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .breakdown tr {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .breakdown tr:last-child {
+            border-bottom: none;
+        }
+
+        .breakdown td {
+            padding: 9px 0;
+            font-size: 13px;
+        }
+
+        .breakdown td:first-child {
+            color: var(--muted);
+        }
+
+        .breakdown td:last-child {
+            text-align: right;
+            font-family: var(--font-mono);
+            font-weight: 500;
+        }
+
+        .breakdown .pos {
+            color: var(--green);
+        }
+
+        .breakdown .neg {
+            color: var(--red);
+        }
+
+        .breakdown .total td {
+            color: var(--text);
+            font-weight: 500;
+            font-size: 14px;
+            padding-top: 14px;
+        }
+
+        .breakdown .total td:first-child {
+            color: var(--text);
+        }
+
+        /* ── freshness box ── */
+        .freshness-box {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 24px;
+        }
+
+        .freshness-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .freshness-title {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+        }
+
+        .freshness-badge {
+            font-size: 10px;
+            font-family: var(--font-mono);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .freshness-desc {
+            font-size: 12px;
+            color: var(--text);
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .freshness-comparison {
+            font-size: 11px;
+            color: var(--muted);
+            border-top: 1px dashed var(--border);
+            padding-top: 10px;
+            line-height: 1.5;
+        }
+
+        /* ── cohort retention table ── */
+        .framework-desc {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .cohort-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 4px;
+            font-size: 13px;
+            margin-top: 16px;
+        }
+
+        .cohort-table th {
+            text-align: center;
+            padding: 8px 0;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--hint);
+            border-bottom: 1px solid var(--border);
+            font-weight: 400;
+        }
+
+        .cohort-table th:first-child {
+            text-align: left;
+        }
+
+        .cohort-table td:first-child {
+            width: 25%;
+            white-space: nowrap;
+            font-family: var(--font-main);
+            font-size: 12px;
+        }
+
+        /* ── insight box ── */
+        .insight {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            margin-top: 24px;
+        }
+
+        .insight-section {
+            margin-bottom: 14px;
+        }
+
+        .insight-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .insight-title {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .insight-title.good {
+            color: var(--green);
+        }
+
+        .insight-title.warn {
+            color: var(--amber);
+        }
+
+        .insight-title.alert {
+            color: var(--red);
+        }
+
+        .insight-text {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* ── footer ── */
+        footer {
+            margin-top: 60px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        footer .f-label {
+            font-size: 12px;
+            color: var(--hint);
+            font-family: var(--font-mono);
+        }
+
+        footer .f-brand {
+            font-size: 13px;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="shell">
+
+        <header>
+            <div class="eyebrow">B2B SaaS — Coffee Bean Subscription Calculator</div>
+            <h1>Bean Subscription<br><strong>Unit Economics</strong></h1>
+            <p class="tagline">Model subscription economics for independent specialty coffee roasters. Pivot from prepaid pass bundles to recurring subscriptions: optimize bag delivery frequencies for bean freshness, calculate automated recurring billing vs. manual QRIS churn, and forecast B2B SaaS cohort retention.</p>
+        </header>
+
+        <div class="cols">
+
+            <!-- Column 1: Subscription Inputs -->
+            <div class="panel">
+                <div class="panel-title">Subscription Inputs</div>
+
+                <!-- Subscription Tier Selection -->
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Subscription Tier (AOV Anchor)</span>
+                    </div>
+                    <div class="tier-selector-container">
+                        <button type="button" id="tier_discovery" class="selector-btn" onclick="setTier('discovery')">Discovery (~$25)</button>
+                        <button type="button" id="tier_explorer" class="selector-btn active" onclick="setTier('explorer')">Explorer (~$45)</button>
+                        <button type="button" id="tier_connoisseur" class="selector-btn" onclick="setTier('connoisseur')">Connoisseur (~$65)</button>
+                        <button type="button" id="tier_custom" class="selector-btn" onclick="setTier('custom')">Custom</button>
+                    </div>
+                </div>
+
+                <!-- Curation Model Selection -->
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Curation & Churn Preset</span>
+                    </div>
+                    <div class="curation-selector-container">
+                        <button type="button" id="curation_same" class="selector-btn" onclick="setCuration('same')">Same Blend</button>
+                        <button type="button" id="curation_rotational" class="selector-btn active" onclick="setCuration('rotational')">Rotational</button>
+                        <button type="button" id="curation_multi" class="selector-btn" onclick="setCuration('multi')">Multi-Roaster</button>
+                    </div>
+                    <div class="billing-hint" id="curationHint">
+                        Rotational single-origin discovery box. Moderate churn (6% base).
+                    </div>
+                </div>
+
+                <div class="control" style="margin-top: 15px;">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Retail price per 250g bag</span>
+                        <span class="ctrl-value" id="priceOut">Rp 150.000</span>
+                    </div>
+                    <input type="range" id="price" min="40000" max="300000" step="5000" value="150000">
+                </div>
+
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">COGS per 250g bag (beans + roast + box)</span>
+                        <span class="ctrl-value" id="cogsOut">Rp 55.000</span>
+                    </div>
+                    <input type="range" id="cogs" min="15000" max="150000" step="2500" value="55000">
+                </div>
+
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Daily consumption (brewer cups/day)</span>
+                        <span class="ctrl-value" id="cupsOut">2 cups / day</span>
+                    </div>
+                    <input type="range" id="cups" min="1" max="10" step="1" value="2">
+                </div>
+
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Subscription discount</span>
+                        <span class="ctrl-value" id="discOut">10%</span>
+                    </div>
+                    <input type="range" id="disc" min="0" max="30" step="1" value="10">
+                </div>
+
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Billing Engine Integration</span>
+                    </div>
+                    <div class="billing-toggle-container">
+                        <button type="button" id="billingAuto" class="toggle-btn active" onclick="setBillingType('recurring')">Automated Recurring</button>
+                        <button type="button" id="billingManual" class="toggle-btn" onclick="setBillingType('manual')">Manual QRIS / Transfer</button>
+                    </div>
+                    <div class="billing-hint" id="billingHint">
+                        Automated billing hits credit cards/e-wallets automatically. Low churn (6% base). PG fee set to 4.0%.
+                    </div>
+                </div>
+
+                <div class="control" style="margin-top: 15px;">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Base monthly churn rate</span>
+                        <span class="ctrl-value" id="churnOut">6%</span>
+                    </div>
+                    <input type="range" id="churn" min="1" max="25" step="1" value="6">
+                </div>
+
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Customer Acquisition Cost (CAC)</span>
+                        <span class="ctrl-value" id="cacOut">Rp 350.000</span>
+                    </div>
+                    <input type="range" id="cac" min="50000" max="1000000" step="25000" value="350000">
+                </div>
+
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Billing gateway fee</span>
+                        <span class="ctrl-value" id="pgFeeOut">4.0%</span>
+                    </div>
+                    <input type="range" id="pgFee" min="0.5" max="10" step="0.1" value="4.0">
+                </div>
+
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">New subscribers per month</span>
+                        <span class="ctrl-value" id="newSubsOut">20</span>
+                    </div>
+                    <input type="range" id="newSubs" min="5" max="200" step="5" value="20">
+                </div>
+            </div>
+
+            <!-- Column 2: Economics & Freshness Engine -->
+            <div class="panel">
+                <div class="panel-title">Subscriber Unit Economics</div>
+
+                <div class="metric-row">
+                    <div class="metric accent">
+                        <div class="m-label">Monthly Price / Sub</div>
+                        <div class="m-val" id="mCash">—</div>
+                        <div class="m-sub">after subscription discount</div>
+                    </div>
+                    <div class="metric good">
+                        <div class="m-label">Monthly Net Profit</div>
+                        <div class="m-val" id="mProfit">—</div>
+                        <div class="m-sub">after COGS and PG fees</div>
+                    </div>
+                    <div class="metric">
+                        <div class="m-label">Gross Margin</div>
+                        <div class="m-val" id="mMargin">—</div>
+                        <div class="m-sub" id="mMarginSub">—</div>
+                    </div>
+                    <div class="metric accent">
+                        <div class="m-label">Delivery Schedule</div>
+                        <div class="m-val" style="font-size: 14px; line-height: 1.3;" id="mDeliverySchedule">—</div>
+                        <div class="m-sub" id="mDeliverySub">—</div>
+                    </div>
+                </div>
+
+                <table class="breakdown" id="breakdownTable"></table>
+
+                <!-- Freshness Analysis -->
+                <div class="freshness-box" id="freshnessBox">
+                    <div class="freshness-header">
+                        <span class="freshness-title">Freshness Analysis</span>
+                        <span class="freshness-badge" id="freshnessBadge">PEAK</span>
+                    </div>
+                    <div class="freshness-desc" id="freshnessDesc"></div>
+                    <div class="freshness-comparison" id="freshnessComparison"></div>
+                </div>
+
+                <div class="insight" id="insight"></div>
+            </div>
+
+            <!-- Column 3: Cohort Retention Dashboard -->
+            <div class="panel">
+                <div class="panel-title">Cohort Retention & SaaS Growth</div>
+
+                <div class="metric-row triple">
+                    <div class="metric good" id="mLifespanMetric">
+                        <div class="m-label">Sub Lifespan</div>
+                        <div class="m-val" id="mLifespan">—</div>
+                        <div class="m-sub">avg active months</div>
+                    </div>
+                    <div class="metric good" id="mLTVMetric">
+                        <div class="m-label">Customer LTV</div>
+                        <div class="m-val" id="mLTV">—</div>
+                        <div class="m-sub">lifetime net profit</div>
+                    </div>
+                    <div class="metric good" id="mLTVToCACMetric">
+                        <div class="m-label">LTV : CAC Ratio</div>
+                        <div class="m-val" id="mLTVToCAC">—</div>
+                        <div class="m-sub">acquisition efficiency</div>
+                    </div>
+                    <div class="metric good" id="mPaybackMetric">
+                        <div class="m-label">CAC Payback</div>
+                        <div class="m-val" id="mPayback">—</div>
+                        <div class="m-sub">months to break even</div>
+                    </div>
+                    <div class="metric accent">
+                        <div class="m-label">Steady-State Subs</div>
+                        <div class="m-val" id="mSteadySubs">—</div>
+                        <div class="m-sub">equilibrium active subs</div>
+                    </div>
+                    <div class="metric good">
+                        <div class="m-label">Steady-State MRR</div>
+                        <div class="m-val" id="mSteadyMRR">—</div>
+                        <div class="m-sub">steady monthly rev</div>
+                    </div>
+                </div>
+
+                <p class="framework-desc" style="margin-bottom: 12px;">
+                    Cohort retention models subscriber loyalty decay. Drag the churn rate slider or toggle billing types (automated billing lowers churn dramatically) to see the heatmap update:
+                </p>
+
+                <table class="cohort-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Cohort</th>
+                            <th>M0</th>
+                            <th>M1</th>
+                            <th>M2</th>
+                            <th>M3</th>
+                            <th>M4</th>
+                            <th>M5</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cohortBody">
+                    </tbody>
+                </table>
+
+                <div class="cohort-legend" style="margin-top: 14px; display: flex; gap: 12px; font-size: 10px; font-family: var(--font-mono); justify-content: flex-end;">
+                    <span style="display: flex; align-items: center; gap: 4px;">
+                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: rgba(93, 170, 127, 0.22);"></span> High (&ge;75%)
+                    </span>
+                    <span style="display: flex; align-items: center; gap: 4px;">
+                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: rgba(200, 169, 110, 0.15);"></span> Mid (60-75%)
+                    </span>
+                    <span style="display: flex; align-items: center; gap: 4px;">
+                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: rgba(196, 98, 74, 0.12);"></span> Low (&lt;60%)
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <span class="f-label">beans-subscription-calculator.html</span>
+            <span class="f-brand">B2B SaaS Architecture Design</span>
+        </footer>
+
+    </div>
+
+    <script>
+        const fmtRp = (n) => {
+            if (n >= 1000000000) return 'Rp ' + (n / 1000000000).toFixed(1) + 'M';
+            if (n >= 1000000) return 'Rp ' + (n / 1000000).toFixed(1) + 'jt';
+            return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+        };
+        const fmtPct = (n) => (n * 100).toFixed(1) + '%';
+
+        let currentBillingType = 'recurring';
+        let currentTier = 'explorer';
+        let currentCuration = 'rotational';
+
+        function setBillingType(type) {
+            currentBillingType = type;
+            
+            const btnAuto = document.getElementById('billingAuto');
+            const btnManual = document.getElementById('billingManual');
+            const pgFeeSlider = document.getElementById('pgFee');
+            const hint = document.getElementById('billingHint');
+            
+            if (type === 'recurring') {
+                btnAuto.classList.add('active');
+                btnManual.classList.remove('active');
+                pgFeeSlider.value = 4.0;
+                hint.innerHTML = 'Automated billing hits credit cards/e-wallets automatically. Low churn. PG fee set to 4.0%.';
+            } else {
+                btnManual.classList.add('active');
+                btnAuto.classList.remove('active');
+                pgFeeSlider.value = 0.7;
+                hint.innerHTML = 'Manual billing requires customer to pay invoice via QRIS/Transfer monthly. Churn penalty (+12% churn). PG fee set to 0.7%.';
+            }
+            
+            updateShop();
+        }
+
+        function setTier(tier) {
+            currentTier = tier;
+            
+            ['discovery', 'explorer', 'connoisseur', 'custom'].forEach(t => {
+                const btn = document.getElementById('tier_' + t);
+                if (btn) {
+                    if (t === tier) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                }
+            });
+
+            const priceSlider = document.getElementById('price');
+            const cogsSlider = document.getElementById('cogs');
+
+            if (tier === 'discovery') {
+                priceSlider.value = 90000;
+                cogsSlider.value = 30000;
+            } else if (tier === 'explorer') {
+                priceSlider.value = 150000;
+                cogsSlider.value = 55000;
+            } else if (tier === 'connoisseur') {
+                priceSlider.value = 250000;
+                cogsSlider.value = 95000;
+            }
+            
+            updateShop();
+        }
+
+        function setCuration(curation) {
+            currentCuration = curation;
+
+            ['same', 'rotational', 'multi'].forEach(c => {
+                const btn = document.getElementById('curation_' + c);
+                if (btn) {
+                    if (c === curation) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                }
+            });
+
+            const churnSlider = document.getElementById('churn');
+            const curationHint = document.getElementById('curationHint');
+
+            if (curation === 'same') {
+                churnSlider.value = 3;
+                curationHint.innerHTML = 'Same blend, espresso/filter lovers. Good dialed-in routine. Low churn (3% base).';
+            } else if (curation === 'rotational') {
+                churnSlider.value = 6;
+                curationHint.innerHTML = 'Rotational single-origins from same roaster. Explores origins. Moderate churn (6% base).';
+            } else if (curation === 'multi') {
+                churnSlider.value = 10;
+                curationHint.innerHTML = 'Multi-roaster global variety discovery box. High choice excitement. High churn (10% base).';
+            }
+
+            updateShop();
+        }
+
+        function updateShop() {
+            // Get inputs
+            const price = +document.getElementById('price').value;
+            const cogs = +document.getElementById('cogs').value;
+            const cupsPerDay = +document.getElementById('cups').value;
+            const disc = +document.getElementById('disc').value / 100;
+            const baseChurn = +document.getElementById('churn').value / 100;
+            const cac = +document.getElementById('cac').value;
+            const pgFeePct = +document.getElementById('pgFee').value / 100;
+            const newSubsPerMonth = +document.getElementById('newSubs').value;
+
+            // Frequency Calculator Math
+            const dailyBeansG = cupsPerDay * 15;
+            const monthlyBeansG = dailyBeansG * 30;
+            const bagSizeG = 250;
+            const exactBagsNeeded = monthlyBeansG / bagSizeG;
+            const bagsNeeded = Math.ceil(exactBagsNeeded);
+            const daysPerBag = bagSizeG / dailyBeansG;
+
+            // Delivery schedule determination
+            let deliverySchedule = '';
+            let deliverySub = '';
+            if (cupsPerDay === 1) {
+                deliverySchedule = '1 bag every 2 weeks';
+                deliverySub = 'Shipment every 14 days';
+            } else if (cupsPerDay === 2) {
+                deliverySchedule = '1 bag every week';
+                deliverySub = 'Shipment every 7 days';
+            } else if (cupsPerDay === 3) {
+                deliverySchedule = '2 bags every 10 days';
+                deliverySub = 'Shipment every 10 days';
+            } else if (cupsPerDay === 4) {
+                deliverySchedule = '2 bags every week';
+                deliverySub = 'Shipment every 7 days';
+            } else {
+                const bagsPerShipment = Math.ceil(cupsPerDay / 2);
+                deliverySchedule = `${bagsPerShipment} bags every week`;
+                deliverySub = `Shipment every 7 days`;
+            }
+
+            // Freshness analysis
+            const freshnessBadge = document.getElementById('freshnessBadge');
+            const freshnessDesc = document.getElementById('freshnessDesc');
+            const freshnessComparison = document.getElementById('freshnessComparison');
+
+            if (daysPerBag <= 14) {
+                freshnessBadge.textContent = 'PEAK';
+                freshnessBadge.style.background = 'var(--green-dim)';
+                freshnessBadge.style.color = 'var(--green)';
+                freshnessDesc.innerHTML = `At <strong>${cupsPerDay} cups/day</strong>, a 250g bag is consumed in <strong>${daysPerBag.toFixed(1)} days</strong>. Subscribers finish the bag well within the 14-day peak freshness window.`;
+            } else if (daysPerBag <= 21) {
+                freshnessBadge.textContent = 'GOOD';
+                freshnessBadge.style.background = 'var(--accent-dim)';
+                freshnessBadge.style.color = 'var(--accent)';
+                freshnessDesc.innerHTML = `At <strong>${cupsPerDay} cups/day</strong>, a 250g bag is consumed in <strong>${daysPerBag.toFixed(1)} days</strong>. Good quality, though coffee flavor slowly tapers after day 14.`;
+            } else {
+                freshnessBadge.textContent = 'STALE RISK';
+                freshnessBadge.style.background = 'var(--red-dim)';
+                freshnessBadge.style.color = 'var(--red)';
+                freshnessDesc.innerHTML = `At <strong>${cupsPerDay} cups/day</strong>, a 250g bag takes <strong>${daysPerBag.toFixed(0)} days</strong> to consume. Beans will lose flavor and go flat. Consider recommending a smaller bag size (e.g., 150g).`;
+            }
+
+            // Bulk buying comparison
+            const bulkDays = 1000 / dailyBeansG;
+            freshnessComparison.innerHTML = `💡 <strong>Freshness vs. Bulk:</strong> Buying a 1kg bag at once would sit for <strong>${bulkDays.toFixed(0)} days</strong>. The last ${(bulkDays - 14).toFixed(0)} days would be flat. By shipping 250g bags every ${daysPerBag.toFixed(0)} days, the user drinks fresh coffee 100% of the time.`;
+
+            // Subscription Unit Economics Math
+            const discountPrice = price * (1 - disc);
+            const grossRev = bagsNeeded * discountPrice;
+            const pgFee = grossRev * pgFeePct;
+            const netCashIn = grossRev - pgFee;
+            const monthlyCOGS = bagsNeeded * cogs;
+            const monthlyProfit = netCashIn - monthlyCOGS;
+            const margin = grossRev > 0 ? (netCashIn - monthlyCOGS) / grossRev : 0;
+            const normalMargin = price > 0 ? (price - cogs) / price : 0;
+
+            // Billing adjustments & Churn Calculation
+            const churnPenalty = (currentBillingType === 'manual') ? 0.12 : 0;
+            const actualChurn = Math.min(0.50, Math.max(0.01, baseChurn + churnPenalty));
+            const lifespan = 1 / actualChurn;
+            const ltv = monthlyProfit * lifespan;
+
+            // LTV/CAC Ratio and Payback calculations
+            const ltvToCac = cac > 0 ? ltv / cac : 0;
+            const payback = monthlyProfit > 0 ? cac / monthlyProfit : 0;
+
+            // Steady-State Projections
+            const steadyStateSubs = newSubsPerMonth / actualChurn;
+            const steadyStateMRR = steadyStateSubs * grossRev;
+
+            // Update DOM Elements for Economics Panel
+            document.getElementById('priceOut').textContent = fmtRp(price);
+            document.getElementById('cogsOut').textContent = fmtRp(cogs);
+            document.getElementById('cupsOut').textContent = cupsPerDay + (cupsPerDay === 1 ? ' cup / day' : ' cups / day');
+            document.getElementById('discOut').textContent = Math.round(disc * 100) + '%';
+            document.getElementById('churnOut').textContent = Math.round(baseChurn * 100) + '%';
+            document.getElementById('cacOut').textContent = fmtRp(cac);
+            document.getElementById('pgFeeOut').textContent = (pgFeePct * 100).toFixed(1) + '%';
+            document.getElementById('newSubsOut').textContent = newSubsPerMonth;
+
+            document.getElementById('mCash').textContent = fmtRp(grossRev);
+            document.getElementById('mProfit').textContent = fmtRp(monthlyProfit);
+            document.getElementById('mMargin').textContent = fmtPct(margin);
+            document.getElementById('mMarginSub').textContent = 'normal retail: ' + fmtPct(normalMargin);
+            document.getElementById('mDeliverySchedule').textContent = deliverySchedule;
+            document.getElementById('mDeliverySub').textContent = deliverySub;
+
+            // Render breakdown table
+            document.getElementById('breakdownTable').innerHTML = `
+                <tr><td>Price per 250g bag (discounted)</td><td class="pos">${fmtRp(discountPrice)} <span style="font-size:10px; color:var(--muted)">(-${Math.round(disc * 100)}%)</span></td></tr>
+                <tr><td>Bags needed / month</td><td>${bagsNeeded} bags (${bagsNeeded * 250}g)</td></tr>
+                <tr><td>Gross monthly revenue</td><td class="pos">${fmtRp(grossRev)}</td></tr>
+                <tr><td>Billing engine fee (${(pgFeePct * 100).toFixed(1)}%)</td><td class="neg">– ${fmtRp(pgFee)}</td></tr>
+                <tr><td>Net monthly cash collected</td><td class="pos">${fmtRp(netCashIn)}</td></tr>
+                <tr><td>Monthly COGS (${bagsNeeded} bags × ${fmtRp(cogs)})</td><td class="neg">– ${fmtRp(monthlyCOGS)}</td></tr>
+                <tr class="total"><td>Monthly profit / sub</td><td class="pos">${fmtRp(monthlyProfit)}</td></tr>
+            `;
+
+            // Update SaaS Metrics Panel
+            document.getElementById('mLifespan').textContent = lifespan.toFixed(1) + ' mo';
+            document.getElementById('mLTV').textContent = fmtRp(ltv);
+            document.getElementById('mLTVToCAC').textContent = ltvToCac.toFixed(1) + 'x';
+            document.getElementById('mPayback').textContent = payback.toFixed(1) + ' mo';
+            document.getElementById('mSteadySubs').textContent = Math.round(steadyStateSubs);
+            document.getElementById('mSteadyMRR').textContent = fmtRp(steadyStateMRR);
+
+            // Dynamic card color adjustments based on health ratios
+            const ltvCacMetric = document.getElementById('mLTVToCACMetric');
+            if (ltvToCac >= 3.0) {
+                ltvCacMetric.className = 'metric good';
+            } else if (ltvToCac >= 1.5) {
+                ltvCacMetric.className = 'metric warn';
+            } else {
+                ltvCacMetric.className = 'metric alert';
+            }
+
+            const paybackMetric = document.getElementById('mPaybackMetric');
+            if (payback <= 6.0) {
+                paybackMetric.className = 'metric good';
+            } else if (payback <= 12.0) {
+                paybackMetric.className = 'metric warn';
+            } else {
+                paybackMetric.className = 'metric alert';
+            }
+
+            // Render Cohort Table
+            updateCohortTable(actualChurn);
+
+            // Render Insights Box
+            renderInsights(margin, normalMargin, disc, pgFeePct, actualChurn, cupsPerDay, daysPerBag, monthlyProfit, ltv, steadyStateSubs, steadyStateMRR, newSubsPerMonth, ltvToCac, payback);
+        }
+
+        function updateCohortTable(actualChurn) {
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+            const tbody = document.getElementById('cohortBody');
+            tbody.innerHTML = '';
+            
+            for (let c = 0; c < 5; c++) {
+                let rowHtml = `<tr><td style="font-weight: 500; color: var(--accent); padding: 8px 0;">${months[c]} Cohort</td>`;
+                for (let m = 0; m < 6; m++) {
+                    if (m < c) {
+                        rowHtml += `<td style="opacity: 0.15; font-family: var(--font-mono); text-align: center;">-</td>`;
+                    } else {
+                        const monthIndex = m - c;
+                        const activePct = Math.pow(1 - actualChurn, monthIndex);
+                        const activePctVal = Math.round(activePct * 100);
+                        
+                        let cellBg = '';
+                        let cellFg = 'var(--text)';
+                        if (activePctVal >= 75) {
+                            cellBg = 'rgba(93, 170, 127, 0.22)';
+                            cellFg = 'var(--green)';
+                        } else if (activePctVal >= 60) {
+                            cellBg = 'rgba(200, 169, 110, 0.15)';
+                            cellFg = 'var(--accent)';
+                        } else {
+                            cellBg = 'rgba(196, 98, 74, 0.12)';
+                            cellFg = 'var(--red)';
+                        }
+                        
+                        rowHtml += `<td style="background: ${cellBg}; color: ${cellFg}; font-family: var(--font-mono); text-align: center; font-weight: 500; font-size: 11px; padding: 6px 4px; border-radius: 4px; border: 1px solid var(--border);">${activePctVal}%</td>`;
+                    }
+                }
+                rowHtml += `</tr>`;
+                tbody.innerHTML += rowHtml;
+            }
+        }
+
+        function renderInsights(margin, normalMargin, disc, pgFeePct, actualChurn, cupsPerDay, daysPerBag, monthlyProfit, ltv, steadyStateSubs, steadyStateMRR, newSubsPerMonth, ltvToCac, payback) {
+            // 1. Freshness Insight
+            let freshnessClass = 'good';
+            let freshnessTitle = '✓ Peak Freshness Guaranteed / Jaminan Kesegaran Maksimal';
+            let freshnessTextEN = `With ${cupsPerDay} cups/day, consuming a 250g bag in ${Math.round(daysPerBag)} days ensures your subscribers always drink peak-flavor beans (optimal within 21 days of roasting).`;
+            let freshnessTextID = `Dengan konsumsi ${cupsPerDay} cangkir/hari, menghabiskan 250g kopi dalam ${Math.round(daysPerBag)} hari menjamin kesegaran rasa biji kopi terbaik (optimal 21 hari setelah sangrai).`;
+
+            if (daysPerBag > 21) {
+                freshnessClass = 'warn';
+                freshnessTitle = '⚠ Freshness Risk / Risiko Penurunan Kesegaran';
+                freshnessTextEN = `At this rate, a 250g bag takes ${Math.round(daysPerBag)} days to consume. Beans will start tasting flat by the end. Consider offering smaller bag options (e.g., 150g) or advising them to increase consumption.`;
+                freshnessTextID = `Dengan laju ini, 250g kopi membutuhkan ${Math.round(daysPerBag)} hari untuk habis. Rasa kopi akan menjadi datar di akhir. Pertimbangkan opsi kemasan lebih kecil (misal 150g) atau sarankan tingkat konsumsi lebih tinggi.`;
+            }
+
+            // 2. Billing Insight
+            let billingClass = 'good';
+            let billingTitle = '✓ Billing Strategy: Optimized / Strategi Billing: Optimal';
+            let billingTextEN = `Automated billing via card/e-wallet keeps churn low (modelled at ${fmtPct(actualChurn)}). Low drop-offs secure predictable cash flow and maximize lifetime value (LTV).`;
+            let billingTextID = `Sistem tagihan otomatis (Stripe/Midtrans) menjaga churn tetap rendah (${fmtPct(actualChurn)}). Minimnya pembatalan mengamankan arus kas bulanan dan memaksimalkan LTV.`;
+
+            if (currentBillingType === 'manual') {
+                billingClass = 'alert';
+                billingTitle = '⚠ Billing Strategy: Churn Risk / Risiko Churn Tinggi';
+                billingTextEN = `Manual billing (QRIS/Transfer) has a massive churn penalty (+12%). Customers forget or opt-out instead of renewing, which degrades LTV and makes MRR volatile. We highly recommend automated recurring billing.`;
+                billingTextID = `Tagihan manual (QRIS/Transfer) berdampak buruk pada tingkat churn (+12%). Pelanggan sering lupa atau malas memperpanjang, yang menurunkan LTV dan membuat MRR tidak stabil. Sangat disarankan beralih ke billing otomatis.`;
+            }
+
+            // 3. LTV & Growth Analysis
+            let ltvClass = 'good';
+            let ltvTitle = '⚡ LTV & Subscription Growth / Pertumbuhan LTV & Langganan';
+            let ltvTextEN = `At a monthly profit of ${fmtRp(monthlyProfit)} and churn of ${fmtPct(actualChurn)}, each subscriber yields ${fmtRp(ltv)} in lifetime value. Acquiring ${newSubsPerMonth} subs/month leads to a steady-state of ${Math.round(steadyStateSubs)} active subscribers, generating ${fmtRp(steadyStateMRR)} MRR.`;
+            let ltvTextID = `Dengan laba bulanan ${fmtRp(monthlyProfit)} dan churn ${fmtPct(actualChurn)}, setiap pelanggan menghasilkan LTV sebesar ${fmtRp(ltv)}. Mendapatkan ${newSubsPerMonth} pelanggan baru/bulan akan menghasilkan ${Math.round(steadyStateSubs)} pelanggan aktif stabil dengan MRR ${fmtRp(steadyStateMRR)}.`;
+
+            if (ltvToCac < 3.0) {
+                ltvClass = 'warn';
+                ltvTitle = '⚠ Acquisition Efficiency Check / Efisiensi Akusisi Rendah';
+                ltvTextEN = `Your LTV to CAC ratio is ${ltvToCac.toFixed(1)}x (recommended &ge; 3.0x). If payback takes ${payback.toFixed(1)} months, high Month 2 churn is the enemy. Prove LTV payback under 6 months by optimizing CAC or raising AOV.`;
+                ltvTextID = `Rasio LTV terhadap CAC Anda adalah ${ltvToCac.toFixed(1)}x (target &ge; 3.0x). Jika pengembalian modal (payback) membutuhkan waktu ${payback.toFixed(1)} bulan, churn Bulan ke-2 adalah musuh utama Anda. Kejar payback di bawah 6 bulan dengan mengoptimalkan CAC atau menaikkan AOV.`;
+            } else if (margin < 0.3) {
+                ltvClass = 'alert';
+                ltvTitle = '⚠ Low Subscription Margin / Margin Langganan Rendah';
+                ltvTextEN = `Your gross subscription margin (${fmtPct(margin)}) is low. High COGS or steep discounts are diluting profitability. Try lowering the discount to under 15% or optimizing your sourcing costs to protect margins.`;
+                ltvTextID = `Margin laba kotor langganan Anda (${fmtPct(margin)}) terlalu rendah. COGS yang tinggi atau diskon yang terlalu besar mengikis keuntungan. Coba turunkan diskon di bawah 15% atau sarankan penghematan biaya produksi.`;
+            }
+
+            document.getElementById('insight').innerHTML = `
+                <div class="insight-section">
+                    <div class="insight-title ${freshnessClass}">${freshnessTitle}</div>
+                    <div class="insight-text">
+                        <div>${freshnessTextEN}</div>
+                        <div style="margin-top: 4px; font-style: italic; opacity: 0.75;">${freshnessTextID}</div>
+                    </div>
+                </div>
+                <div class="insight-section" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+                    <div class="insight-title ${billingClass}">${billingTitle}</div>
+                    <div class="insight-text">
+                        <div>${billingTextEN}</div>
+                        <div style="margin-top: 4px; font-style: italic; opacity: 0.75;">${billingTextID}</div>
+                    </div>
+                </div>
+                <div class="insight-section" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+                    <div class="insight-title ${ltvClass}">${ltvTitle}</div>
+                    <div class="insight-text">
+                        <div>${ltvTextEN}</div>
+                        <div style="margin-top: 4px; font-style: italic; opacity: 0.75;">${ltvTextID}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Sliders & inputs event listeners
+        ['price', 'cogs', 'cups', 'disc', 'churn', 'cac', 'pgFee', 'newSubs'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                // If price or cogs are manually adjusted, change tier selector to "Custom"
+                if (id === 'price' || id === 'cogs') {
+                    ['discovery', 'explorer', 'connoisseur'].forEach(t => {
+                        document.getElementById('tier_' + t).classList.remove('active');
+                    });
+                    document.getElementById('tier_custom').classList.add('active');
+                }
+                
+                // If churn is manually adjusted, remove curation preset active states
+                if (id === 'churn') {
+                    ['same', 'rotational', 'multi'].forEach(c => {
+                        document.getElementById('curation_' + c).classList.remove('active');
+                    });
+                }
+                
+                updateShop();
+            });
+        });
+
+        // Initialize
+        updateShop();
+    </script>
+</body>
+
+</html>

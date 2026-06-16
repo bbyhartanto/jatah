@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bean Subscription Economics — Roastery Platform</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f7f4ef;
+  --bg2:       #ede9e1;
+  --bg3:       #e4dfd5;
+  --ink:       #1c1a17;
+  --ink2:      #3d3a35;
+  --ink3:      #6b6760;
+  --ink4:      #9e9a94;
+  --rule:      rgba(28,26,23,0.1);
+  --rule2:     rgba(28,26,23,0.06);
+  --win:       #2d6a4f;
+  --win-bg:    #e8f5ee;
+  --lose:      #9b2335;
+  --lose-bg:   #fbeaec;
+  --warn:      #7a4f1d;
+  --warn-bg:   #fdf3e3;
+  --accent:    #6b3d14;
+  --font-disp: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+html { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.6; }
+body { min-height: 100vh; }
+
+.shell { max-width: 1020px; margin: 0 auto; padding: 0 28px 100px; }
+
+/* ── HEADER ── */
+header {
+  padding: 56px 0 44px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 48px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 24px;
+}
+@media (max-width: 600px) { header { grid-template-columns: 1fr; } }
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 12px;
+}
+h1 {
+  font-family: var(--font-disp);
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 300;
+  line-height: 1.1;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+h1 em { font-style: italic; color: var(--accent); }
+.tagline { font-size: 14px; color: var(--ink3); margin-top: 10px; max-width: 480px; line-height: 1.7; }
+
+/* ── VERDICT BADGE ── live top-right ── */
+.verdict-badge {
+  text-align: right;
+}
+.vb-label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink4); margin-bottom: 6px; }
+.vb-val {
+  font-family: var(--font-disp);
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1;
+}
+.vb-sub { font-size: 12px; color: var(--ink4); margin-top: 4px; font-family: var(--font-mono); }
+.vb-val.win  { color: var(--win); }
+.vb-val.lose { color: var(--lose); }
+.vb-val.warn { color: var(--warn); }
+
+/* ── SECTION LABEL ── */
+.sec-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink4);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 20px;
+}
+
+/* ── GRID LAYOUTS ── */
+.cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 680px) {
+  .cols-3 { grid-template-columns: 1fr 1fr; }
+  .cols-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 420px) { .cols-3 { grid-template-columns: 1fr; } }
+
+.section { margin-bottom: 44px; }
+
+/* ── CONTROL PANEL ── */
+.ctrl-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; background: white; }
+@media (max-width: 680px) { .ctrl-grid { grid-template-columns: 1fr; } }
+
+.ctrl-cell {
+  padding: 18px 20px;
+  border-right: 1px solid var(--rule2);
+  border-bottom: 1px solid var(--rule2);
+}
+.ctrl-cell:nth-child(2n) { border-right: none; }
+.ctrl-cell:nth-last-child(-n+2) { border-bottom: none; }
+@media (max-width: 680px) {
+  .ctrl-cell { border-right: none; }
+  .ctrl-cell:last-child { border-bottom: none; }
+}
+
+.ctrl-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.ctrl-name { font-size: 12px; color: var(--ink3); }
+.ctrl-val { font-family: var(--font-mono); font-size: 14px; font-weight: 500; color: var(--accent); }
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 1.5px;
+  background: var(--bg3);
+  border-radius: 1px;
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+input[type=range]::-moz-range-thumb {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  cursor: pointer;
+}
+.ctrl-hint { font-size: 11px; color: var(--ink4); margin-top: 6px; }
+
+/* ── METRIC CARDS ── */
+.mcard {
+  background: white;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+.mcard .mc-label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink4); margin-bottom: 6px; }
+.mcard .mc-val { font-family: var(--font-disp); font-size: 26px; font-weight: 400; color: var(--ink); line-height: 1; }
+.mcard .mc-sub { font-size: 11px; color: var(--ink4); margin-top: 5px; font-family: var(--font-mono); }
+.mcard.win  { background: var(--win-bg);  border-color: rgba(45,106,79,0.2); }
+.mcard.lose { background: var(--lose-bg); border-color: rgba(155,35,53,0.2); }
+.mcard.warn { background: var(--warn-bg); border-color: rgba(122,79,29,0.2); }
+.mcard.win  .mc-val { color: var(--win);  }
+.mcard.lose .mc-val { color: var(--lose); }
+.mcard.warn .mc-val { color: var(--warn); }
+
+/* ── WATERFALL ── */
+.waterfall { background: white; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+.wf-row {
+  display: grid;
+  grid-template-columns: 1fr 110px 180px;
+  align-items: center;
+  padding: 11px 20px;
+  border-bottom: 1px solid var(--rule2);
+  font-size: 13px;
+  gap: 12px;
+}
+@media (max-width: 500px) { .wf-row { grid-template-columns: 1fr 80px; } .wf-bar-cell { display: none; } }
+.wf-row:last-child { border-bottom: none; }
+.wf-row.total {
+  background: var(--bg2);
+  font-weight: 500;
+  border-top: 1px solid var(--rule);
+}
+.wf-row.header { background: var(--bg); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--ink4); }
+.wf-label { color: var(--ink2); }
+.wf-label small { display: block; font-size: 11px; color: var(--ink4); margin-top: 1px; font-style: italic; }
+.wf-amount { font-family: var(--font-mono); font-size: 13px; text-align: right; }
+.wf-amount.pos { color: var(--win); }
+.wf-amount.neg { color: var(--lose); }
+.wf-amount.neutral { color: var(--ink3); }
+.wf-bar-cell { position: relative; height: 6px; background: var(--bg3); border-radius: 3px; }
+.wf-bar { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
+.wf-bar.pos { background: var(--win); }
+.wf-bar.neg { background: var(--lose); }
+.tag { display: inline-block; font-size: 9px; font-family: var(--font-mono); padding: 1px 5px; border-radius: 3px; vertical-align: middle; margin-left: 5px; text-transform: uppercase; letter-spacing: 0.06em; }
+.tag-win  { background: var(--win-bg);  color: var(--win);  }
+.tag-lose { background: var(--lose-bg); color: var(--lose); }
+.tag-warn { background: var(--warn-bg); color: var(--warn); }
+
+/* ── WIN/LOSE LEVERS ── */
+.lever-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 580px) { .lever-grid { grid-template-columns: 1fr; } }
+.lever {
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 16px;
+  background: white;
+}
+.lever .lv-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.lever .lv-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.lever .lv-icon.win  { background: var(--win-bg); }
+.lever .lv-icon.lose { background: var(--lose-bg); }
+.lever .lv-name { font-size: 13px; font-weight: 500; color: var(--ink); }
+.lever .lv-status { font-family: var(--font-mono); font-size: 11px; margin-left: auto; }
+.lever .lv-status.win  { color: var(--win); }
+.lever .lv-status.lose { color: var(--lose); }
+.lever .lv-status.warn { color: var(--warn); }
+.lever .lv-desc { font-size: 12px; color: var(--ink3); line-height: 1.6; }
+.lever .lv-val { font-family: var(--font-mono); font-size: 20px; font-weight: 500; margin-bottom: 2px; }
+.lever .lv-val.win  { color: var(--win); }
+.lever .lv-val.lose { color: var(--lose); }
+.lever .lv-val.warn { color: var(--warn); }
+
+/* ── PLATFORM VIEW ── */
+.plat-bar { background: white; border: 1px solid var(--rule); border-radius: 12px; padding: 24px; }
+.plat-ctrl-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-bottom: 24px; }
+@media (max-width: 580px) { .plat-ctrl-row { grid-template-columns: 1fr; } }
+
+.p-metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+@media (max-width: 680px) { .p-metrics { grid-template-columns: 1fr 1fr; } }
+
+/* ── INSIGHT STRIP ── */
+.insight {
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 13px;
+  line-height: 1.75;
+  margin-top: 20px;
+  border-left: 3px solid;
+}
+.insight.win  { background: var(--win-bg);  border-color: var(--win);  color: #1a4a35; }
+.insight.lose { background: var(--lose-bg); border-color: var(--lose); color: #6e1a26; }
+.insight.warn { background: var(--warn-bg); border-color: var(--warn); color: #5a3512; }
+.insight strong { font-weight: 500; }
+
+/* ── CHURN IMPACT ── */
+.churn-table { width: 100%; border-collapse: collapse; font-size: 13px; background: white; border-radius: 10px; overflow: hidden; border: 1px solid var(--rule); }
+.churn-table th { padding: 10px 16px; background: var(--bg); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--ink4); font-weight: 400; text-align: left; border-bottom: 1px solid var(--rule); }
+.churn-table td { padding: 10px 16px; border-bottom: 1px solid var(--rule2); color: var(--ink3); }
+.churn-table tr:last-child td { border-bottom: none; }
+.churn-table td:first-child { color: var(--ink); font-weight: 500; }
+.churn-table .mono { font-family: var(--font-mono); }
+.churn-table .active-row { background: #fffef0; }
+.churn-table .active-row td { color: var(--warn); }
+.churn-table .active-row td:first-child { color: var(--warn); }
+
+footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; font-size: 11px; font-family: var(--font-mono); color: var(--ink4); flex-wrap: wrap; gap: 8px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- HEADER -->
+<header>
+  <div>
+    <div class="eyebrow">Roastery Platform · Bean Subscription</div>
+    <h1>What makes it<br><em>win or lose</em></h1>
+    <p class="tagline">Full unit economics for a monthly bag drop subscription. Every variable that shifts profit — modelled live for roasters and platform operators.</p>
+  </div>
+  <div class="verdict-badge">
+    <div class="vb-label">Profit / bag</div>
+    <div class="vb-val" id="verdictVal">—</div>
+    <div class="vb-sub" id="verdictSub">—</div>
+  </div>
+</header>
+
+<!-- SECTION 1: INPUTS -->
+<div class="section">
+  <div class="sec-label">Roastery inputs — drag to model your numbers</div>
+  <div class="ctrl-grid">
+
+    <div class="ctrl-cell">
+      <div class="ctrl-top">
+        <span class="ctrl-name">Subscription price / month</span>
+        <span class="ctrl-val" id="subPriceOut">Rp 150.000</span>
+      </div>
+      <input type="range" id="subPrice" min="60000" max="400000" step="5000" value="150000">
+      <div class="ctrl-hint">What the customer pays per month for one bag</div>
+    </div>
+
+    <div class="ctrl-cell">
+      <div class="ctrl-top">
+        <span class="ctrl-name">Bag weight</span>
+        <span class="ctrl-val" id="bagWeightOut">200 g</span>
+      </div>
+      <input type="range" id="bagWeight" min="100" max="500" step="50" value="200">
+      <div class="ctrl-hint">Roasted weight delivered to customer</div>
+    </div>
+
+    <div class="ctrl-cell">
+      <div class="ctrl-top">
+        <span class="ctrl-name">Green bean cost / kg</span>
+        <span class="ctrl-val" id="greenCostOut">Rp 80.000</span>
+      </div>
+      <input type="range" id="greenCost" min="40000" max="300000" step="5000" value="80000">
+      <div class="ctrl-hint">Wet-hulled Sumatran ~80k, washed Flores ~120k, natural Toraja ~150k+</div>
+    </div>
+
+    <div class="ctrl-cell">
+      <div class="ctrl-top">
+        <span class="ctrl-name">Roast yield loss</span>
+        <span class="ctrl-val" id="yieldLossOut">16%</span>
+      </div>
+      <input type="range" id="yieldLoss" min="10" max="22" step="1" value="16">
+      <div class="ctrl-hint">Light roast ~12–14%, medium ~15–17%, dark ~18–22%</div>
+    </div>
+
+    <div class="ctrl-cell">
+      <div class="ctrl-top">
+        <span class="ctrl-name">Packaging cost / bag</span>
+        <span class="ctrl-val" id="packCostOut">Rp 5.000</span>
+      </div>
+      <input type="range" id="packCost" min="2000" max="20000" step="500" value="5000">
+      <div class="ctrl-hint">Resealable + one-way valve + label. Branded tin-tie bags run 8–15k.</div>
+    </div>
+
+    <div class="ctrl-cell">
+      <div class="ctrl-top">
+        <span class="ctrl-name">Courier cost / shipment</span>
+        <span class="ctrl-val" id="courierOut">Rp 15.000</span>
+      </div>
+      <input type="range" id="courier" min="8000" max="45000" step="1000" value="15000">
+      <div class="ctrl-hint">J&T/SiCepat ~12–20k within Java. Cross-island adds 15–25k.</div>
+    </div>
+
+    <div class="ctrl-cell">
+      <div class="ctrl-top">
+        <span class="ctrl-name">Labour & ops / bag</span>
+        <span class="ctrl-val" id="labourOut">Rp 8.000</span>
+      </div>
+      <input type="range" id="labour" min="2000" max="30000" step="1000" value="8000">
+      <div class="ctrl-hint">Roasting time, sorting, packing, admin. Divide monthly fixed labour by bags/month.</div>
+    </div>
+
+    <div class="ctrl-cell">
+      <div class="ctrl-top">
+        <span class="ctrl-name">Monthly churn rate</span>
+        <span class="ctrl-val" id="churnOut">5%</span>
+      </div>
+      <input type="range" id="churn" min="1" max="30" step="1" value="5">
+      <div class="ctrl-hint">% of subscribers who cancel each month. Under 5% is healthy for specialty.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SECTION 2: WATERFALL -->
+<div class="section">
+  <div class="sec-label">Cost waterfall — per bag, per month</div>
+  <div class="waterfall">
+    <div class="wf-row header">
+      <div>Line item</div>
+      <div style="text-align:right">Amount</div>
+      <div class="wf-bar-cell" style="background:none;">% of revenue</div>
+    </div>
+    <div id="waterfallBody"></div>
+  </div>
+  <div class="insight" id="waterfallInsight"></div>
+</div>
+
+<!-- SECTION 3: KEY METRICS -->
+<div class="section">
+  <div class="sec-label">What the numbers say</div>
+  <div class="cols-3" id="metricsRow" style="margin-bottom: 16px;"></div>
+  <div class="cols-2">
+    <div class="mcard" id="mLTV" style="display:flex;gap:20px;align-items:center;grid-column:1/-1">
+      <div>
+        <div class="mc-label">Customer LTV</div>
+        <div class="mc-val" id="ltvVal">—</div>
+        <div class="mc-sub" id="ltvSub">—</div>
+      </div>
+      <div style="flex:1;border-left:1px solid var(--rule);padding-left:20px;">
+        <div class="mc-label" style="margin-bottom:8px;">LTV at different churn scenarios</div>
+        <div id="ltvScenarios" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 4: WIN / LOSE LEVERS -->
+<div class="section">
+  <div class="sec-label">Win / lose levers — variables that move the needle most</div>
+  <div class="lever-grid" id="leverGrid"></div>
+</div>
+
+<!-- SECTION 5: CHURN IMPACT TABLE -->
+<div class="section">
+  <div class="sec-label">Churn impact on annual revenue — per 100 subscribers</div>
+  <table class="churn-table" id="churnTable"></table>
+</div>
+
+<!-- SECTION 6: PLATFORM VIEW -->
+<div class="section">
+  <div class="sec-label">Platform operator view</div>
+  <div class="plat-bar">
+    <div class="plat-ctrl-row">
+      <div class="ctrl-cell" style="border:none;padding:0;">
+        <div class="ctrl-top"><span class="ctrl-name">Active roastery tenants</span><span class="ctrl-val" id="pTenantsOut">30</span></div>
+        <input type="range" id="pTenants" min="5" max="300" step="5" value="30">
+      </div>
+      <div class="ctrl-cell" style="border:none;padding:0;">
+        <div class="ctrl-top"><span class="ctrl-name">Avg subscribers / roastery</span><span class="ctrl-val" id="pSubsOut">80</span></div>
+        <input type="range" id="pSubs" min="10" max="500" step="10" value="80">
+      </div>
+      <div class="ctrl-cell" style="border:none;padding:0;">
+        <div class="ctrl-top"><span class="ctrl-name">Platform transaction fee</span><span class="ctrl-val" id="pFeeOut">4%</span></div>
+        <input type="range" id="pFee" min="1" max="12" step="0.5" value="4">
+        <div class="ctrl-hint">Charged on each subscription payment collected</div>
+      </div>
+    </div>
+    <div class="plat-ctrl-row" style="margin-bottom:0;">
+      <div class="ctrl-cell" style="border:none;padding:0;">
+        <div class="ctrl-top"><span class="ctrl-name">SaaS fee / roastery / month</span><span class="ctrl-val" id="pSaasOut">Rp 199.000</span></div>
+        <input type="range" id="pSaas" min="0" max="800000" step="25000" value="199000">
+      </div>
+      <div class="ctrl-cell" style="border:none;padding:0;">
+        <div class="ctrl-top"><span class="ctrl-name">Bags / roastery / month</span><span class="ctrl-val" id="pBagsOut">80 bags</span></div>
+        <input type="range" id="pBags" min="10" max="500" step="10" value="80">
+        <div class="ctrl-hint">Auto-linked to avg subscribers above</div>
+      </div>
+      <div></div>
+    </div>
+    <div style="height:1px;background:var(--rule);margin:20px 0;"></div>
+    <div class="p-metrics" id="platMetrics"></div>
+    <div class="insight" id="platInsight"></div>
+  </div>
+</div>
+
+<footer>
+  <span>bean-subscription-calculator.html</span>
+  <span>Coffee Platform · Roastery Economics</span>
+</footer>
+</div>
+
+<script>
+const rp = (n) => {
+  if (Math.abs(n) >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M';
+  if (Math.abs(n) >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt';
+  return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+};
+const pct = (n, dec=1) => (n*100).toFixed(dec) + '%';
+const bar = (ratio, cls) => {
+  const w = Math.min(100, Math.max(0, ratio*100)).toFixed(1);
+  return `<div class="wf-bar-cell"><div class="wf-bar ${cls}" style="width:${w}%"></div></div>`;
+};
+
+function calc() {
+  const subPrice  = +document.getElementById('subPrice').value;
+  const bagWeight = +document.getElementById('bagWeight').value;
+  const greenCost = +document.getElementById('greenCost').value;
+  const yieldLoss = +document.getElementById('yieldLoss').value / 100;
+  const packCost  = +document.getElementById('packCost').value;
+  const courier   = +document.getElementById('courier').value;
+  const labour    = +document.getElementById('labour').value;
+  const churn     = +document.getElementById('churn').value / 100;
+
+  // output labels
+  document.getElementById('subPriceOut').textContent  = rp(subPrice);
+  document.getElementById('bagWeightOut').textContent = bagWeight + ' g';
+  document.getElementById('greenCostOut').textContent = rp(greenCost);
+  document.getElementById('yieldLossOut').textContent = (yieldLoss*100).toFixed(0) + '%';
+  document.getElementById('packCostOut').textContent  = rp(packCost);
+  document.getElementById('courierOut').textContent   = rp(courier);
+  document.getElementById('labourOut').textContent    = rp(labour);
+  document.getElementById('churnOut').textContent     = (churn*100).toFixed(0) + '%';
+
+  // ── COST WATERFALL ──
+  // green bean cost: need bagWeight g roasted → buy bagWeight / (1 - yieldLoss) g green
+  const greenNeeded_g = bagWeight / (1 - yieldLoss);
+  const greenCostPerBag = (greenNeeded_g / 1000) * greenCost;
+  const totalCOGS = greenCostPerBag + packCost + courier + labour;
+  const grossProfit = subPrice - totalCOGS;
+  const margin = grossProfit / subPrice;
+
+  // waterfall rows: [label, sublabel, amount, isRevenue]
+  const rows = [
+    { label: 'Subscription revenue',      sub: 'Customer monthly payment',        amt: subPrice,       cls: 'pos', type: 'rev' },
+    { label: 'Green beans',               sub: `${greenNeeded_g.toFixed(0)}g green → ${bagWeight}g roasted at ${(yieldLoss*100).toFixed(0)}% yield loss`, amt: -greenCostPerBag, cls: 'neg', type: 'cost' },
+    { label: 'Packaging',                 sub: 'Resealable bag + valve + label',   amt: -packCost,      cls: 'neg', type: 'cost' },
+    { label: 'Courier',                   sub: 'Door-to-door delivery',            amt: -courier,       cls: 'neg', type: 'cost' },
+    { label: 'Labour & operations',       sub: 'Roasting, packing, admin per bag', amt: -labour,        cls: 'neg', type: 'cost' },
+  ];
+
+  let wfHTML = '';
+  rows.forEach(r => {
+    const ratio = Math.abs(r.amt) / subPrice;
+    wfHTML += `<div class="wf-row">
+      <div class="wf-label">${r.label}<small>${r.sub}</small></div>
+      <div class="wf-amount ${r.cls}">${r.amt > 0 ? '' : '−'}${rp(Math.abs(r.amt))}</div>
+      ${bar(ratio, r.amt > 0 ? 'pos' : 'neg')}
+    </div>`;
+  });
+
+  // total row
+  const totalClass = grossProfit > 0 ? 'pos' : 'neg';
+  const tag = grossProfit > 0
+    ? `<span class="tag tag-win">profit</span>`
+    : `<span class="tag tag-lose">loss</span>`;
+  wfHTML += `<div class="wf-row total">
+    <div class="wf-label">Gross profit / bag ${tag}</div>
+    <div class="wf-amount ${totalClass}">${grossProfit >= 0 ? '' : '−'}${rp(Math.abs(grossProfit))}</div>
+    ${bar(Math.abs(margin), grossProfit >= 0 ? 'pos' : 'neg')}
+  </div>`;
+  document.getElementById('waterfallBody').innerHTML = wfHTML;
+
+  // waterfall insight
+  const biggestCost = [
+    { name: 'green beans', val: greenCostPerBag },
+    { name: 'courier',     val: courier },
+    { name: 'labour',      val: labour },
+    { name: 'packaging',   val: packCost },
+  ].sort((a,b) => b.val - a.val)[0];
+
+  let wfIns, wfCls;
+  if (margin > 0.35) {
+    wfCls = 'win'; wfIns = `<strong>Strong margin.</strong> At ${pct(margin)} gross margin, you have room to absorb courier fluctuations, offer referral discounts, and still build a healthy business. Your biggest cost is ${biggestCost.name} at ${rp(biggestCost.val)} per bag — keep an eye on it as you scale.`;
+  } else if (margin > 0.15) {
+    wfCls = 'warn'; wfIns = `<strong>Thin but workable.</strong> ${pct(margin)} gross margin means you're making ${rp(grossProfit)} per bag. Manageable at scale, but one bad courier month or a green bean price spike will hurt. ${biggestCost.name} is your biggest lever — reduce it or raise your price.`;
+  } else if (margin > 0) {
+    wfCls = 'warn'; wfIns = `<strong>Too thin.</strong> ${pct(margin)} gross margin leaves almost no buffer. At this level, subscriber acquisition costs will put you underwater immediately. You need to either raise price, reduce courier cost (negotiate bulk rates or pickup points), or use a lighter roast profile to reduce yield loss.`;
+  } else {
+    wfCls = 'lose'; wfIns = `<strong>Losing money per bag.</strong> Every subscription you sell makes you poorer. The core problem: costs (${rp(totalCOGS)}) exceed your price (${rp(subPrice)}). Raise price, cut ${biggestCost.name}, or reduce bag weight before launching.`;
+  }
+  document.getElementById('waterfallInsight').className = `insight ${wfCls}`;
+  document.getElementById('waterfallInsight').innerHTML = wfIns;
+
+  // ── VERDICT ──
+  const verdictEl = document.getElementById('verdictVal');
+  verdictEl.textContent = rp(grossProfit);
+  verdictEl.className = 'vb-val ' + (grossProfit > 0 ? (margin > 0.25 ? 'win' : 'warn') : 'lose');
+  document.getElementById('verdictSub').textContent = pct(margin) + ' margin per bag';
+
+  // ── METRICS ROW ──
+  const avgLifeMonths = 1 / churn;
+  const ltv = grossProfit * avgLifeMonths;
+  const cogsTotal = totalCOGS;
+
+  const metrics = [
+    { label: 'Total COGS / bag', val: rp(cogsTotal), sub: 'beans + pack + courier + labour', cls: grossProfit > 0 ? '' : 'lose' },
+    { label: 'Gross margin', val: pct(margin), sub: 'revenue minus all per-bag costs', cls: margin > 0.3 ? 'win' : margin > 0.1 ? 'warn' : 'lose' },
+    { label: 'Avg subscriber life', val: avgLifeMonths.toFixed(1) + ' mo', sub: `at ${(churn*100).toFixed(0)}% monthly churn`, cls: avgLifeMonths > 12 ? 'win' : avgLifeMonths > 6 ? 'warn' : 'lose' },
+  ];
+  document.getElementById('metricsRow').innerHTML = metrics.map(m =>
+    `<div class="mcard ${m.cls}"><div class="mc-label">${m.label}</div><div class="mc-val">${m.val}</div><div class="mc-sub">${m.sub}</div></div>`
+  ).join('');
+
+  // ── LTV ──
+  document.getElementById('ltvVal').textContent = rp(ltv);
+  document.getElementById('ltvVal').className = 'mc-val ' + (ltv > 0 ? (ltv > subPrice * 6 ? 'win' : 'warn') : 'lose');
+  document.getElementById('ltvSub').textContent = `${rp(grossProfit)} profit/month × ${avgLifeMonths.toFixed(1)} months avg life`;
+
+  const churnScenarios = [2, 5, 10, 20];
+  document.getElementById('ltvScenarios').innerHTML = churnScenarios.map(c => {
+    const life = 1 / (c/100);
+    const v = grossProfit * life;
+    const cls = v > 0 ? (v > subPrice*6 ? 'win' : 'warn') : 'lose';
+    const active = Math.round(churn*100) === c ? ' style="box-shadow:0 0 0 1.5px var(--accent)"' : '';
+    return `<div class="mcard ${cls}"${active}>
+      <div class="mc-label">${c}% churn</div>
+      <div class="mc-val" style="font-size:16px">${rp(v)}</div>
+      <div class="mc-sub">${life.toFixed(0)} mo life</div>
+    </div>`;
+  }).join('');
+
+  // ── WIN/LOSE LEVERS ──
+  const greenPct = greenCostPerBag / subPrice;
+  const courierPct = courier / subPrice;
+  const labourPct = labour / subPrice;
+  const packPct = packCost / subPrice;
+
+  // Sensitivity: what's the impact of +10% change in each variable?
+  const delta = grossProfit > 0;
+
+  const levers = [
+    {
+      name: 'Bean cost & origin',
+      icon: '🫘',
+      desc: `Green beans are ${pct(greenPct)} of your revenue. A 20% swing in green cost (common with single origin) moves margin by ~${pct(greenCostPerBag * 0.2 / subPrice)}. Lock in contracts or build a 2-month green stock buffer.`,
+      val: rp(greenCostPerBag) + '/bag',
+      status: greenPct < 0.25 ? 'good' : greenPct < 0.4 ? 'watch' : 'critical',
+    },
+    {
+      name: 'Courier cost',
+      icon: '📦',
+      desc: `Courier is ${pct(courierPct)} of revenue. At scale, negotiate bulk rates with J&T or Anteraja — 200+ shipments/month typically unlocks 15–25% discounts. Local pickup option eliminates this entirely.`,
+      val: rp(courier) + '/bag',
+      status: courierPct < 0.12 ? 'good' : courierPct < 0.2 ? 'watch' : 'critical',
+    },
+    {
+      name: 'Roast yield loss',
+      icon: '🔥',
+      desc: `You lose ${(yieldLoss*100).toFixed(0)}% weight in roasting. On a ${bagWeight}g roasted bag, that's ${(bagWeight/(1-yieldLoss)-bagWeight).toFixed(0)}g green wasted. Light roasts recover 2–4% yield vs dark, worth ~${rp((bagWeight/(1-yieldLoss) - bagWeight/Math.max(0.78,1-(yieldLoss-0.03))) / 1000 * greenCost)} per bag.`,
+      val: (yieldLoss*100).toFixed(0) + '% loss',
+      status: yieldLoss < 0.15 ? 'good' : yieldLoss < 0.18 ? 'watch' : 'critical',
+    },
+    {
+      name: 'Monthly churn',
+      icon: '📉',
+      desc: `At ${(churn*100).toFixed(0)}% churn your average subscriber stays ${avgLifeMonths.toFixed(1)} months. Drop churn to ${Math.max(1, Math.round(churn*100)-3)}% and LTV rises to ${rp(grossProfit / Math.max(0.01, churn - 0.03))}. Churn is the multiplier on everything else.`,
+      val: (churn*100).toFixed(0) + '% / month',
+      status: churn < 0.04 ? 'good' : churn < 0.08 ? 'watch' : 'critical',
+    },
+    {
+      name: 'Bag weight vs price',
+      icon: '⚖️',
+      desc: `You're charging ${rp(subPrice/bagWeight*100)}/100g. Specialty market tolerates up to ${rp(Math.round(subPrice/bagWeight*100 * 1.3))}. Reducing bag to ${Math.max(100, bagWeight-50)}g at the same price adds ${rp(grossProfit - (subPrice - ((bagWeight-50)/(1-yieldLoss)/1000*greenCost + packCost + courier + labour)))} profit — or use it to lower price to attract volume.`,
+      val: rp(subPrice/bagWeight*100) + '/100g',
+      status: (subPrice / bagWeight) > 1200 ? 'good' : (subPrice / bagWeight) > 800 ? 'watch' : 'critical',
+    },
+    {
+      name: 'Labour & overhead',
+      icon: '🧑‍🍳',
+      desc: `Labour at ${rp(labour)}/bag is ${pct(labourPct)} of revenue. This shrinks as volume grows — fixed roastery costs spread over more bags. At 200 bags/month the same fixed labour cost becomes ~${rp(labour * 0.5)}/bag. Scale is your friend here.`,
+      val: rp(labour) + '/bag',
+      status: labourPct < 0.1 ? 'good' : labourPct < 0.18 ? 'watch' : 'critical',
+    },
+  ];
+
+  const statusLabel = { good: '✓ healthy', watch: '⚠ watch', critical: '✗ critical' };
+  const statusCls   = { good: 'win', watch: 'warn', critical: 'lose' };
+
+  document.getElementById('leverGrid').innerHTML = levers.map(l => `
+    <div class="lever">
+      <div class="lv-head">
+        <div class="lv-icon ${statusCls[l.status]}">${l.icon}</div>
+        <span class="lv-name">${l.name}</span>
+        <span class="lv-status ${statusCls[l.status]}">${statusLabel[l.status]}</span>
+      </div>
+      <div class="lv-val ${statusCls[l.status]}">${l.val}</div>
+      <div class="lv-desc">${l.desc}</div>
+    </div>
+  `).join('');
+
+  // ── CHURN TABLE ──
+  const churnRates = [1, 2, 3, 5, 8, 10, 15, 20, 25, 30];
+  const currentChurnPct = Math.round(churn * 100);
+  let churnHTML = `<thead><tr>
+    <th>Monthly churn</th>
+    <th>Avg life (months)</th>
+    <th>Subscribers at month 12</th>
+    <th>Annual revenue (100 subs start)</th>
+    <th>Annual profit</th>
+  </tr></thead><tbody>`;
+
+  churnRates.forEach(c => {
+    const life = 1 / (c/100);
+    let subs = 100, totalRev = 0;
+    for (let m = 0; m < 12; m++) {
+      totalRev += subs * subPrice;
+      subs = subs * (1 - c/100);
+    }
+    const totalProfit = totalRev * margin;
+    const active = c === currentChurnPct;
+    const rowCls = active ? ' class="active-row"' : '';
+    churnHTML += `<tr${rowCls}>
+      <td>${c}% ${active ? '← current' : ''}</td>
+      <td class="mono">${life.toFixed(1)} mo</td>
+      <td class="mono">${Math.round(subs)} subs</td>
+      <td class="mono">${rp(totalRev)}</td>
+      <td class="mono" style="color:${totalProfit > 0 ? 'var(--win)' : 'var(--lose)'}">${rp(totalProfit)}</td>
+    </tr>`;
+  });
+  churnHTML += '</tbody>';
+  document.getElementById('churnTable').innerHTML = churnHTML;
+
+  // ── PLATFORM VIEW ──
+  updatePlatform(subPrice, grossProfit, margin);
+}
+
+function updatePlatform(subPrice, grossProfit, margin) {
+  const tenants = +document.getElementById('pTenants').value;
+  const subs    = +document.getElementById('pSubs').value;
+  const fee     = +document.getElementById('pFee').value / 100;
+  const saas    = +document.getElementById('pSaas').value;
+
+  document.getElementById('pTenantsOut').textContent = tenants;
+  document.getElementById('pSubsOut').textContent    = subs;
+  document.getElementById('pFeeOut').textContent     = (+document.getElementById('pFee').value).toFixed(1) + '%';
+  document.getElementById('pSaasOut').textContent    = rp(saas);
+  document.getElementById('pBagsOut').textContent    = subs + ' bags';
+
+  const gmv = tenants * subs * subPrice;
+  const txFeeRev = gmv * fee;
+  const saasRev = tenants * saas;
+  const totalPlatRev = txFeeRev + saasRev;
+  const perTenant = totalPlatRev / tenants;
+  // platform holds 1 month's GMV as float before payout
+  const float = gmv; // collected monthly upfront
+
+  document.getElementById('platMetrics').innerHTML = `
+    <div class="mcard"><div class="mc-label">Monthly GMV</div><div class="mc-val" style="font-size:22px">${rp(gmv)}</div><div class="mc-sub">${tenants} shops × ${subs} subs</div></div>
+    <div class="mcard win"><div class="mc-label">Platform revenue</div><div class="mc-val" style="font-size:22px">${rp(totalPlatRev)}</div><div class="mc-sub">fee + SaaS combined</div></div>
+    <div class="mcard"><div class="mc-label">Revenue / tenant</div><div class="mc-val" style="font-size:22px">${rp(perTenant)}</div><div class="mc-sub">blended per roastery</div></div>
+    <div class="mcard warn"><div class="mc-label">Monthly float held</div><div class="mc-val" style="font-size:22px">${rp(float * fee)}</div><div class="mc-sub">your fee in transit before payout</div></div>
+  `;
+
+  const breakeven = Math.ceil((saas * tenants) / (subPrice * fee));
+  document.getElementById('platInsight').className = `insight ${totalPlatRev > 500000 ? 'win' : 'warn'}`;
+  document.getElementById('platInsight').innerHTML = `
+    Platform collects <strong>${rp(txFeeRev)}</strong> in transaction fees + <strong>${rp(saasRev)}</strong> SaaS = <strong>${rp(totalPlatRev)}/month</strong>. 
+    Each roastery contributes <strong>${rp(perTenant)}</strong>. 
+    You break even on infra at roughly <strong>${Math.ceil(500000 / perTenant)} roasteries</strong> (assuming Rp 500k/month server cost). 
+    Unlike the cup model, there's no breakage float — subscriptions ship every month. 
+    Your leverage is <strong>churn stickiness</strong>: a roastery with 80 loyal subscribers is hard to migrate off your platform.
+  `;
+}
+
+// wire all controls
+['subPrice','bagWeight','greenCost','yieldLoss','packCost','courier','labour','churn'].forEach(id => {
+  document.getElementById(id).addEventListener('input', calc);
+});
+['pTenants','pSubs','pFee','pSaas'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    const subPrice = +document.getElementById('subPrice').value;
+    const greenCost = +document.getElementById('greenCost').value;
+    const yieldLoss = +document.getElementById('yieldLoss').value / 100;
+    const bagWeight = +document.getElementById('bagWeight').value;
+    const packCost = +document.getElementById('packCost').value;
+    const courier = +document.getElementById('courier').value;
+    const labour = +document.getElementById('labour').value;
+    const greenNeeded_g = bagWeight / (1 - yieldLoss);
+    const greenCostPerBag = (greenNeeded_g / 1000) * greenCost;
+    const totalCOGS = greenCostPerBag + packCost + courier + labour;
+    const grossProfit = subPrice - totalCOGS;
+    const margin = grossProfit / subPrice;
+    updatePlatform(subPrice, grossProfit, margin);
+  });
+});
+
+calc();
+</script>
+</body>
+</html>

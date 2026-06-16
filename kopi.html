@@ -1,0 +1,813 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loyalty Pass Calculator — Coffee Platform</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0f0e0c;
+            --surface: #1a1916;
+            --surface2: #232119;
+            --border: rgba(255, 255, 255, 0.07);
+            --border-strong: rgba(255, 255, 255, 0.13);
+            --text: #f0ede6;
+            --muted: #7a7670;
+            --hint: #4a4845;
+            --accent: #c8a96e;
+            --accent-dim: rgba(200, 169, 110, 0.12);
+            --accent-dim2: rgba(200, 169, 110, 0.06);
+            --green: #5daa7f;
+            --green-dim: rgba(93, 170, 127, 0.12);
+            --red: #c4624a;
+            --red-dim: rgba(196, 98, 74, 0.1);
+            --amber: #d4943a;
+            --font-main: 'DM Sans', system-ui, sans-serif;
+            --font-mono: 'DM Mono', monospace;
+        }
+
+        html {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-main);
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        body {
+            min-height: 100vh;
+        }
+
+        /* ── layout ── */
+        .shell {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+        }
+
+        /* ── header ── */
+        header {
+            padding: 48px 0 40px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 40px;
+        }
+
+        .eyebrow {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        h1 {
+            font-size: clamp(28px, 4vw, 42px);
+            font-weight: 300;
+            line-height: 1.15;
+            color: var(--text);
+        }
+
+        h1 strong {
+            font-weight: 500;
+        }
+
+        .tagline {
+            margin-top: 10px;
+            font-size: 15px;
+            color: var(--muted);
+            max-width: 560px;
+        }
+
+        /* ── two-col layout ── */
+        /* ── grid layout ── */
+        .cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1400px) {
+            .cols {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── panel ── */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .panel-title {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        /* ── sliders ── */
+        .control {
+            margin-bottom: 20px;
+        }
+
+        .control:last-child {
+            margin-bottom: 0;
+        }
+
+        .ctrl-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+
+        .ctrl-label {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .ctrl-value {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--accent);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 2px;
+            background: var(--border-strong);
+            border-radius: 1px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none;
+            cursor: pointer;
+        }
+
+        input[type=range]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none;
+            cursor: pointer;
+        }
+
+        /* ── metrics ── */
+        .metric-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric {
+            background: var(--surface2);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .metric .m-label {
+            font-size: 11px;
+            color: var(--hint);
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+        }
+
+        .metric .m-val {
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--text);
+            font-family: var(--font-mono);
+        }
+
+        .metric .m-sub {
+            font-size: 11px;
+            color: var(--hint);
+            margin-top: 3px;
+        }
+
+        .metric.good .m-val {
+            color: var(--green);
+        }
+
+        .metric.accent .m-val {
+            color: var(--accent);
+        }
+
+        /* ── breakdown table ── */
+        .breakdown {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .breakdown tr {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .breakdown tr:last-child {
+            border-bottom: none;
+        }
+
+        .breakdown td {
+            padding: 9px 0;
+            font-size: 13px;
+        }
+
+        .breakdown td:first-child {
+            color: var(--muted);
+        }
+
+        .breakdown td:last-child {
+            text-align: right;
+            font-family: var(--font-mono);
+            font-weight: 500;
+        }
+
+        .breakdown .pos {
+            color: var(--green);
+        }
+
+        .breakdown .neg {
+            color: var(--red);
+        }
+
+        .breakdown .total td {
+            color: var(--text);
+            font-weight: 500;
+            font-size: 14px;
+            padding-top: 14px;
+        }
+
+        .breakdown .total td:first-child {
+            color: var(--text);
+        }
+
+        .tag {
+            display: inline-block;
+            font-size: 10px;
+            font-family: var(--font-mono);
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .tag-green {
+            background: var(--green-dim);
+            color: var(--green);
+        }
+
+        .tag-amber {
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .tag-red {
+            background: var(--red-dim);
+            color: var(--red);
+        }
+
+        /* ── insight box ── */
+        .insight {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            margin-top: 24px;
+        }
+
+        .insight-section {
+            margin-bottom: 14px;
+        }
+
+        .insight-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .insight-title {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .insight-title.good {
+            color: var(--green);
+        }
+
+        .insight-title.warn {
+            color: var(--amber);
+        }
+
+        .insight-title.alert {
+            color: var(--red);
+        }
+
+        .insight-text {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+
+
+        /* ── footer ── */
+        footer {
+            margin-top: 60px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        footer .f-label {
+            font-size: 12px;
+            color: var(--hint);
+            font-family: var(--font-mono);
+        }
+
+        footer .f-brand {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        /* ── framework table ── */
+        .framework-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 16px;
+        }
+
+        .framework-table th {
+            text-align: left;
+            padding: 8px 0;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--hint);
+            border-bottom: 1px solid var(--border);
+            font-weight: 400;
+        }
+
+        .framework-table td {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+            vertical-align: top;
+        }
+
+        .framework-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .framework-table td:first-child {
+            font-weight: 500;
+            color: var(--accent);
+            width: 30%;
+        }
+
+        .framework-table td:nth-child(2) {
+            font-family: var(--font-mono);
+            white-space: nowrap;
+            width: 35%;
+        }
+
+        .framework-table td:last-child {
+            color: var(--muted);
+            font-size: 12px;
+            width: 35%;
+        }
+
+        .framework-desc {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .framework-highlight {
+            color: var(--accent);
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="shell">
+
+        <header>
+            <div class="eyebrow">Coffee Loyalty Pass</div>
+            <h1>Loyalty Pass<br><strong>Unit Economics</strong></h1>
+            <p class="tagline">Calculator for coffee shop owners. Model a subscription pass program, see per-member
+                profit, and analyze your unit economics.</p>
+        </header>
+
+        <!-- ── SHOP CALCULATOR ── -->
+        <div class="cols">
+
+            <!-- left: controls -->
+            <div class="panel">
+                <div class="panel-title">Shop inputs</div>
+
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Regular price per cup</span>
+                        <span class="ctrl-value" id="priceOut">Rp 40.000</span>
+                    </div>
+                    <input type="range" id="price" min="20000" max="80000" step="1000" value="40000">
+                </div>
+
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">COGS per cup (beans + milk + cup)</span>
+                        <span class="ctrl-value" id="cogsOut">Rp 16.000</span>
+                    </div>
+                    <input type="range" id="cogs" min="5000" max="35000" step="500" value="16000">
+                </div>
+
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Cups in bundle</span>
+                        <span class="ctrl-value" id="cupsOut">60 cups</span>
+                    </div>
+                    <input type="range" id="cups" min="10" max="100" step="5" value="60">
+                </div>
+
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Discount offered</span>
+                        <span class="ctrl-value" id="discOut">5%</span>
+                    </div>
+                    <input type="range" id="disc" min="3" max="25" step="1" value="5">
+                </div>
+
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Redemption rate (real usage)</span>
+                        <span class="ctrl-value" id="redeemOut">80%</span>
+                    </div>
+                    <input type="range" id="redeem" min="40" max="100" step="5" value="80">
+                </div>
+
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Platform & PG fee</span>
+                        <span class="ctrl-value" id="pgFeeOut">10%</span>
+                    </div>
+                    <input type="range" id="pgFee" min="0" max="20" step="0.5" value="10">
+                </div>
+            </div>
+
+            <!-- right: results -->
+            <div class="panel">
+                <div class="panel-title">Per-member result</div>
+
+                <div class="metric-row">
+                    <div class="metric accent">
+                        <div class="m-label">Net cash collected</div>
+                        <div class="m-val" id="mCash">—</div>
+                        <div class="m-sub">after platform & PG fees</div>
+                    </div>
+                    <div class="metric good">
+                        <div class="m-label">Total profit</div>
+                        <div class="m-val" id="mProfit">—</div>
+                        <div class="m-sub">incl. breakage</div>
+                    </div>
+                    <div class="metric">
+                        <div class="m-label">Effective margin</div>
+                        <div class="m-val" id="mMargin">—</div>
+                        <div class="m-sub" id="mMarginSub">—</div>
+                    </div>
+                    <div class="metric good">
+                        <div class="m-label">Breakage windfall</div>
+                        <div class="m-val" id="mBreakage">—</div>
+                        <div class="m-sub">unredeemed cups</div>
+                    </div>
+                </div>
+
+                <table class="breakdown" id="breakdownTable"></table>
+
+                <div class="insight" id="insight"></div>
+            </div>
+
+            <!-- third: free cups framework -->
+            <div class="panel">
+                <div class="panel-title">The "Free Cups" Framework</div>
+                <div class="framework-desc">
+                    Instead of small percentages, frame the offer in absolutes:
+                    <span class="framework-highlight" id="frameworkFrame">"Pay for 45 cups, get 15 FREE"</span> (which
+                    equates to <span id="frameworkTotal">60</span> cups total).
+                </div>
+
+                <div class="control">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Paid cups</span>
+                        <span class="ctrl-value" id="paidCupsVal">45 cups</span>
+                    </div>
+                    <input type="range" id="paidCups" min="5" max="100" step="1" value="45">
+                </div>
+
+                <div class="control" style="margin-bottom: 24px;">
+                    <div class="ctrl-header">
+                        <span class="ctrl-label">Free cups</span>
+                        <span class="ctrl-value" id="freeCupsVal">15 cups</span>
+                    </div>
+                    <input type="range" id="freeCups" min="0" max="30" step="1" value="15">
+                </div>
+
+                <table class="framework-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>The Math</th>
+                            <th>Business Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody id="frameworkBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <footer>
+            <span class="f-label">coffee-loyalty-calculator.html</span>
+            <span class="f-brand">Built for coffee shop owners</span>
+        </footer>
+
+    </div>
+
+    <script>
+        const fmtRp = (n) => {
+            if (n >= 1000000000) return 'Rp ' + (n / 1000000000).toFixed(1) + 'M';
+            if (n >= 1000000) return 'Rp ' + (n / 1000000).toFixed(1) + 'jt';
+            return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+        };
+        const fmtPct = (n) => (n * 100).toFixed(1) + '%';
+
+
+        function getShopVars() {
+            const price = +document.getElementById('price').value;
+            const cogs = +document.getElementById('cogs').value;
+            const cups = +document.getElementById('cups').value;
+            const disc = +document.getElementById('disc').value / 100;
+            const redeem = +document.getElementById('redeem').value / 100;
+            const pgFeePct = +document.getElementById('pgFee').value / 100;
+            const discPrice = price * (1 - disc);
+            const cashIn = discPrice * cups;
+            const pgFee = cashIn * pgFeePct;
+            const netCashIn = cashIn - pgFee;
+            const redeemedCups = Math.round(cups * redeem);
+            const expectedCOGS = cogs * redeemedCups;
+            const unredeemed = cups - redeemedCups;
+            const breakage = discPrice * unredeemed;
+            const grossProfit = netCashIn - expectedCOGS;
+            const totalProfit = grossProfit;
+            const margin = grossProfit / cashIn;
+            const normalMargin = (price - cogs) / price;
+            return { price, cogs, cups, disc, redeem, pgFeePct, pgFee, netCashIn, discPrice, cashIn, redeemedCups, expectedCOGS, unredeemed, breakage, grossProfit, totalProfit, margin, normalMargin };
+        }
+
+        function updateShop() {
+            const v = getShopVars();
+
+            document.getElementById('priceOut').textContent = fmtRp(v.price);
+            document.getElementById('cogsOut').textContent = fmtRp(v.cogs);
+            document.getElementById('cupsOut').textContent = v.cups + ' cups';
+            document.getElementById('discOut').textContent = Math.round(v.disc * 100) + '%';
+            document.getElementById('redeemOut').textContent = Math.round(v.redeem * 100) + '%';
+            document.getElementById('pgFeeOut').textContent = (+document.getElementById('pgFee').value).toFixed(1) + '%';
+
+            document.getElementById('mCash').textContent = fmtRp(v.netCashIn);
+            document.getElementById('mProfit').textContent = fmtRp(v.grossProfit);
+            document.getElementById('mMargin').textContent = fmtPct(v.margin);
+            document.getElementById('mMarginSub').textContent = 'normal: ' + fmtPct(v.normalMargin);
+            document.getElementById('mBreakage').textContent = fmtRp(v.breakage);
+
+            document.getElementById('breakdownTable').innerHTML = `
+      <tr><td>Bundle sell price</td><td class="pos">${fmtRp(v.discPrice)} × ${v.cups}</td></tr>
+      <tr><td>Gross cash collected</td><td class="pos">${fmtRp(v.cashIn)}</td></tr>
+      <tr><td>Platform & PG fee (${(+document.getElementById('pgFee').value).toFixed(1)}%)</td><td class="neg">– ${fmtRp(v.pgFee)}</td></tr>
+      <tr><td>Net cash collected</td><td class="pos">${fmtRp(v.netCashIn)}</td></tr>
+      <tr><td>Cups redeemed (${Math.round(v.redeem * 100)}%)</td><td>${v.redeemedCups} cups</td></tr>
+      <tr><td>COGS on redeemed</td><td class="neg">– ${fmtRp(v.expectedCOGS)}</td></tr>
+      <tr class="total"><td>Total profit / member</td><td class="pos">${fmtRp(v.grossProfit)}</td></tr>
+    `;
+
+            // 1. Margin Check
+            const marginDelta = v.margin - v.normalMargin;
+            const marginGood = marginDelta >= 0;
+            let marginTitle = '';
+            let marginClass = '';
+            let marginTextEN = '';
+            let marginTextID = '';
+
+            if (marginGood) {
+                marginClass = 'good';
+                marginTitle = '✓ Margin Check: Healthy / Analisis Margin: Sehat';
+                marginTextEN = `Your loyalty margin (${fmtPct(v.margin)}) beats your walk-in margin (${fmtPct(v.normalMargin)}) by ${fmtPct(marginDelta)}. The guaranteed volume offset and breakage windfall are currently working in your favor.`;
+                marginTextID = `Margin loyalitas Anda (${fmtPct(v.margin)}) lebih tinggi dari margin pelanggan biasa (${fmtPct(v.normalMargin)}) sebesar ${fmtPct(marginDelta)}. Efek volume penjualan yang terjamin dan keuntungan breakage saat ini menguntungkan Anda.`;
+            } else {
+                marginClass = 'alert';
+                marginTitle = '⚠ Margin Check: Diluted / Analisis Margin: Terdelusi';
+                marginTextEN = `Your loyalty margin (${fmtPct(v.margin)}) is below your walk-in margin (${fmtPct(v.normalMargin)}). `;
+                marginTextID = `Margin loyalitas Anda (${fmtPct(v.margin)}) berada di bawah margin pelanggan biasa (${fmtPct(v.normalMargin)}). `;
+                if (v.disc > 0.15) {
+                    marginTextEN += `At ${Math.round(v.disc * 100)}%, the discount is too steep. Also, platform & PG fees (${fmtPct(v.pgFeePct)}) directly cut into your margin. Consider lowering the discount to under 15% or increasing the bundle size to secure more volume.`;
+                    marginTextID += `Dengan diskon sebesar ${Math.round(v.disc * 100)}%, potongan harga terlalu tinggi. Selain itu, biaya platform & PG (${fmtPct(v.pgFeePct)}) langsung memotong margin Anda. Pertimbangkan menurunkan diskon di bawah 15% atau meningkatkan jumlah cup untuk mengamankan volume.`;
+                } else {
+                    marginTextEN += `Also, platform & PG fees (${fmtPct(v.pgFeePct)}) directly cut into your margin. Try increasing the bundle size or reducing the discount to protect your bottom line.`;
+                    marginTextID += `Selain itu, biaya platform & PG (${fmtPct(v.pgFeePct)}) langsung memotong margin Anda. Coba tingkatkan jumlah cup per bundle atau kurangi diskon untuk melindungi margin laba kotor Anda.`;
+                }
+            }
+
+            // 2. Breakage Analysis
+            let breakageClass = '';
+            let breakageTitle = '';
+            let breakageTextEN = '';
+            let breakageTextID = '';
+
+            if (v.redeem === 1.0) {
+                breakageClass = 'alert';
+                breakageTitle = '⚠ Breakage Analysis: High Risk / Analisis Breakage: Risiko Tinggi';
+                breakageTextEN = `With a 100% redemption rate, there is no breakage buffer. Every discount offered directly dilutes your profit margin. We highly recommend enforcing a pass expiry (e.g., 30-day validity) to optimize healthy breakage without upsetting customers.`;
+                breakageTextID = `Dengan tingkat penukaran 100%, tidak ada batas aman breakage. Setiap diskon yang diberikan akan langsung mengikis margin keuntungan Anda. Sangat disarankan untuk menerapkan masa kedaluwarsa (misalnya masa aktif 30 hari) untuk mengoptimalkan tingkat breakage yang sehat tanpa mengecewakan pelanggan.`;
+            } else {
+                breakageClass = 'good';
+                breakageTitle = '✓ Breakage Analysis: Protected / Analisis Breakage: Terproteksi';
+                breakageTextEN = `A redemption rate of ${Math.round(v.redeem * 100)}% yields ${fmtRp(v.breakage)} in unredeemed cups per member (pure profit). To sustain this buffer, structure the pass with a 30-day expiry window.`;
+                breakageTextID = `Tingkat penukaran sebesar ${Math.round(v.redeem * 100)}% menghasilkan ${fmtRp(v.breakage)} dari cup yang tidak ditukarkan per anggota (keuntungan bersih). Untuk mempertahankan batas aman ini, atur paket kartu loyalty dengan masa aktif 30 hari.`;
+            }
+
+            // 3. Upsell Opportunities
+            const upsellClass = 'warn';
+            const upsellTitle = '⚡ Upsell Opportunity / Peluang Upsell';
+            const upsellTextEN = `Since pass holders visit your shop frequently (${v.redeemedCups} times per bundle), introduce high-margin pastry or food bundles at check-out. A 20% conversion on pastry upsells can fully offset the loyalty discount and drive higher average transaction values.`;
+            const upsellTextID = `Karena pemegang kartu loyalty sering mengunjungi kedai Anda (${v.redeemedCups} kali per bundle), tawarkan paket pastry atau makanan dengan margin tinggi saat mereka memesan. Konversi 20% pada penjualan pastry dapat sepenuhnya menutupi diskon loyalty dan meningkatkan rata-rata nilai transaksi (AOV).`;
+
+            // Render systematically into insight container
+            document.getElementById('insight').className = 'insight';
+            document.getElementById('insight').innerHTML = `
+                <div class="insight-section">
+                    <div class="insight-title ${marginClass}">${marginTitle}</div>
+                    <div class="insight-text">
+                        <div>${marginTextEN}</div>
+                        <div style="margin-top: 4px; font-style: italic; opacity: 0.75;">${marginTextID}</div>
+                    </div>
+                </div>
+                <div class="insight-section" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+                    <div class="insight-title ${breakageClass}">${breakageTitle}</div>
+                    <div class="insight-text">
+                        <div>${breakageTextEN}</div>
+                        <div style="margin-top: 4px; font-style: italic; opacity: 0.75;">${breakageTextID}</div>
+                    </div>
+                </div>
+                <div class="insight-section" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+                    <div class="insight-title ${upsellClass}">${upsellTitle}</div>
+                    <div class="insight-text">
+                        <div>${upsellTextEN}</div>
+                        <div style="margin-top: 4px; font-style: italic; opacity: 0.75;">${upsellTextID}</div>
+                    </div>
+                </div>
+            `;
+
+            // Free Cups Framework Calculations
+            const freeCups = +document.getElementById('freeCups').value;
+            const paidCups = +document.getElementById('paidCups').value;
+            const totalCups = paidCups + freeCups;
+            const retailValue = totalCups * v.price;
+            const subPrice = paidCups * v.price;
+            const maxCOGS = totalCups * v.cogs;
+            const minProfit = subPrice - maxCOGS;
+
+            document.getElementById('paidCupsVal').textContent = paidCups + ' cups';
+            document.getElementById('freeCupsVal').textContent = freeCups + ' cups';
+            document.getElementById('frameworkFrame').textContent = `"Pay for ${paidCups} cups, get ${freeCups} FREE"`;
+            document.getElementById('frameworkTotal').textContent = totalCups;
+
+            document.getElementById('frameworkBody').innerHTML = `
+                <tr>
+                    <td>Retail Value</td>
+                    <td class="pos">${totalCups} cups × ${fmtRp(v.price)}<br>= ${fmtRp(retailValue)}</td>
+                    <td>The anchor price the customer sees.</td>
+                </tr>
+                <tr>
+                    <td>Subscription Price</td>
+                    <td class="pos">${paidCups} cups × ${fmtRp(v.price)}<br>= ${fmtRp(subPrice)}</td>
+                    <td>The customer saves ${fmtRp(retailValue - subPrice)} (an effective ${fmtPct(freeCups / totalCups)} discount).</td>
+                </tr>
+                <tr>
+                    <td>Maximum COGS</td>
+                    <td class="neg">${totalCups} cups × ${fmtRp(v.cogs)}<br>= ${fmtRp(maxCOGS)}</td>
+                    <td>Your absolute worst-case cost if they drink every drop.</td>
+                </tr>
+                <tr>
+                    <td>Guaranteed Min. Profit</td>
+                    <td class="${minProfit >= 0 ? 'pos' : 'neg'}">${fmtRp(subPrice)} - ${fmtRp(maxCOGS)}<br>= ${fmtRp(minProfit)}</td>
+                    <td>You lock in healthy, upfront cash flow on day one.</td>
+                </tr>
+            `;
+        }
+
+        let isSyncing = false;
+
+        function syncToLeftPanel() {
+            if (isSyncing) return;
+            isSyncing = true;
+
+            const paidCups = +document.getElementById('paidCups').value;
+            const freeCups = +document.getElementById('freeCups').value;
+
+            const totalCups = paidCups + freeCups;
+            let discPct = Math.round((freeCups / totalCups) * 100);
+
+            // Constrain to left panel slider ranges
+            let cupsVal = totalCups;
+            if (cupsVal < 10) cupsVal = 10;
+            if (cupsVal > 100) cupsVal = 100;
+
+            if (discPct < 3) discPct = 3;
+            if (discPct > 25) discPct = 25;
+
+            document.getElementById('cups').value = cupsVal;
+            document.getElementById('disc').value = discPct;
+
+            isSyncing = false;
+        }
+
+        function syncToRightPanel() {
+            if (isSyncing) return;
+            isSyncing = true;
+
+            const cupsVal = +document.getElementById('cups').value;
+            const discVal = +document.getElementById('disc').value / 100;
+
+            const freeCups = Math.round(cupsVal * discVal);
+            const paidCups = cupsVal - freeCups;
+
+            document.getElementById('paidCups').value = paidCups;
+            document.getElementById('freeCups').value = freeCups;
+
+            isSyncing = false;
+        }
+
+        // Event Listeners
+        ['price', 'cogs', 'redeem', 'pgFee'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateShop);
+        });
+
+        ['cups', 'disc'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                syncToRightPanel();
+                updateShop();
+            });
+        });
+
+        ['paidCups', 'freeCups'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                syncToLeftPanel();
+                updateShop();
+            });
+        });
+
+        syncToRightPanel();
+        updateShop();
+    </script>
+</body>
+
+</html>
